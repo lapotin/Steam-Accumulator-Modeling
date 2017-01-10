@@ -6,7 +6,7 @@ PASCALS_PER_BAR = 1.e5;
 EPSILON = .01;
 
 %%input desired electric power of accumulator
-Power_Electric = 363; %MW, desired electrical power of accumulator
+Power_Electric = 530; %MW, desired electrical power of accumulator
 in.Power_Electric = Power_Electric; 
 
 %%input desired pipe length, starting pressure, time step, run time,
@@ -14,17 +14,17 @@ in.Power_Electric = Power_Electric;
 DT = 10;  % s
 P0 = 60; % bar
 RTANK = 0.4064; % m (16 inches)
-LTANK = 150000.; % m
+LTANK = 200000.; % m
 VTANK = LTANK.*pi.*RTANK^2.;  % m3
-Energy = 726; %MWh
+Energy = 530*2; %MWh
 T_END = (Energy/Power_Electric)*3600; % run time (s)
 X0 = 0.06; % vapor quality (mass fraction) 
 TAU = 85; % s, relaxation time
 deltaH=-.01; %kJ/kcg, small change in enthalpy used to evaluate numerical derivative
 deltaP=-.01; %bar, small change in pressure used to evaluate numerical derivative
 
-%QLOSS=.286*LTANK; %kW, heat loss calculated in Qloss to be 286 W/m
-QLOSS=0;
+QLOSS=.286*LTANK; %kW, heat loss calculated in Qloss to be 286 W/m
+%QLOSS=0;
 
 VAP_IN = 0; 
 %VAP_OUT = ; %mass flow rate calculated by RANKINE_REHEAT.m
@@ -166,13 +166,15 @@ for i=1:(N-1)
     
 end
 
-%charging code
+%charging code. We assume maximum mass flow rate is the best economic case
+min_load = 0.6*(outdata.ELECTRICPOWERSTORECASE+outdata.PUMP); %MW, minimum turbine load for charging (60% of base case)
+mDOTCHARGE = 546.8; %kg/s, maximum charging mass flow rate to produce min_load at base case values
 inlet.DT = DT; %time step
 inlet.P_IN = p(i+1); %bar, initial pressure for charging
 inlet.P_END = P0;
 inlet.X0 = x(i+1); %initial quality for charging
 inlet.LTANK = LTANK; %m, pipe length
-inlet.VAP_IN = VAP_OUT(1); %kg/s, charging mass flow rate
+inlet.VAP_IN = mDOTCHARGE; %kg/s, charging mass flow rate
 OUT_CHARGE = CHARGING_REHEAT(inlet); %charging code
 
 %%calculate energy efficiency
@@ -181,12 +183,12 @@ for count = 1:i
     sum = sum + DT*VAP_OUT(count);
 end
 AVG_MD = (1/T_END)*sum; %kg/s, average value of discharge mass flow rate
-ENERGY_EFFICIENCY = (AVG_MD*T_END*(Power_Electric/AVG_MD))/((VAP_OUT(1)*OUT_CHARGE.charge_time+AVG_MD*T_END)*(outdata.ELECTRICPOWERSTORECASE/outdata.MDOTSTORE));
+ENERGY_EFFICIENCY = ((Power_Electric + outdata.ELECTRICPOWERSTORECASE)*T_END+(min_load-outdata.PUMP)*OUT_CHARGE.charge_time)/(outdata.ELECTRICPOWERSTORECASE*(T_END+OUT_CHARGE.charge_time)); %energy with acc/energy without acc
 
 %%calculate revenue of the accumulator with reheat
 ECON_IN.power_acc = Power_Electric; %MW, electric power provided by the accumulator alone
 ECON_IN.power_store = outdata.ELECTRICPOWERSTORECASE; %MW, electric power of the base case (no accumulator)
-ECON_IN.wturb = outdata.WTURB; %MW, turbine power output (assumes WPUMP is negligible) 
+ECON_IN.wturb = outdata.WTURB; %MW, turbine power output
 ECON_IN.condenser = outdata.CONDENSER; %MW, condenser thermal power
 ECON_IN.discharge_time = T_END; %s, discharge time
 ECON_IN.charge_time = OUT_CHARGE.charge_time; %s, charge time

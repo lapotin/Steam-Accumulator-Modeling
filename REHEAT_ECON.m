@@ -2,7 +2,7 @@ function ECON_OUT = REHEAT_ECON(ECON_IN)
 
 power_acc = ECON_IN.power_acc; %MW, electric power provided by the accumulator alone
 power_store = ECON_IN.power_store; %MW, electric power of the base case (no accumulator)
-wturb = ECON_IN.wturb; %MW, turbine power output (assumes WPUMP is negligible) 
+wturb = ECON_IN.wturb; %MW, turbine power output  
 condenser = ECON_IN.condenser; %MW, condenser thermal power
 
 %Price curve and amortization values
