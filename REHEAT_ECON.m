@@ -26,20 +26,20 @@ ANP_gen = 281.4; %Million $
 
 %Base Case (storage case)
 Base_turb = ANP_turb*(power_store/1400)^n; %Million $
-Base_cond = ANP_cond*(3212/2322)^n; %Million $. 3212 MW condenser matches 1316 MW power_store
+Base_cond = ANP_cond*(power_store/1400)^n; %Million $. 3212 MW condenser matches 1316 MW power_store
 Base_gen = ANP_gen*(power_store/1400)^n; %Million $
 Base_total = Base_turb+Base_cond+Base_gen; %Million $, total power dependent capital cost of base case
 
 %Discharge case
 Discharge_turb = ANP_turb*(wturb/1400)^n; %Million $
-Discharge_cond = ANP_cond*(condenser/2322)^n; %Million $
+Discharge_cond = ANP_cond*(wturb/1400)^n; %Million $
 Discharge_gen = ANP_gen*(wturb/1400)^n; %Million $
 Discharge_total = Discharge_turb+Discharge_cond+Discharge_gen; %Million $, total power dependent capital cost of discharge case
 
 %Charge case
-Charge_turb = ANP_turb*(927/1400)^n; %Million $
-Charge_cond = ANP_cond*(1544/2322)^n; %Million $
-Charge_gen = ANP_gen*(927/1400)^n; %Million $
+Charge_turb = ANP_turb*(ECON_IN.min_load/1400)^n; %Million $
+Charge_cond = ANP_cond*(ECON_IN.min_load/1400)^n; %Million $
+Charge_gen = ANP_gen*(ECON_IN.min_load/1400)^n; %Million $
 Charge_total = Charge_turb+Charge_cond+Charge_gen; %Million $, total power dependent capital cost of charge case
 
 %cost of scaling up from the base case to the discharge case
@@ -72,11 +72,6 @@ totalEnergyCost = pipe_and_insulation + buildingCost + storeCost; %Million $
 totalPowerCost = Delta_cost; %Million $
 totalCC=totalPowerCost+totalEnergyCost; %Million $, total overnight capital cost
 
-powerOM=totalPowerCost*0.05; %Million $/year, power dependent O&M cost taken as 5%
-energyOM=totalEnergyCost*0.05; %Million $/year, energy dependent O&M cost taken as 5%
-totalOM=powerOM+energyOM; %Million $/year, total O&M cost per year
-
-
 c1=(3/4)*period-CT/2; %hr, charge time integral lower bound
 c2=(3/4)*period+CT/2; %hr, charge time integral upper bound
 d1=(period/4)-DT/2; %hr, discharge time integral lower bound
@@ -88,9 +83,10 @@ ADP= intD/(d2-d1); %$/MWh, Average discharge price
 ACP= intC/(c2-c1); %$/MWh, Average charge price
 DP=ADP-ACP ; %$/MWh, delta price
 
-RC=ACP*CT*Y*(power_store-927)/10^6; %M$/year, forgone revenue from charging (927 MWe rather than producing normally)
+RC=ACP*CT*Y*(power_store-ECON_IN.min_load)/10^6; %M$/year, forgone revenue from charging
 RD=ADP*DT*Y*power_acc/10^6; %M$/year, revenue from discharging
 CC=totalCC*(interest+(interest/((1+interest)^life-1))); %M$/year, amortized capital cost
+totalOM = 0.05*CC; %M$/year, O&M estimated as 5% yearly capital cost
 netRevenue=RD-RC-CC-totalOM; %M$/year, revenue provided by the addition of the accumulator
 
 ECON_OUT.netRevenue = netRevenue; %M$/year
@@ -98,6 +94,7 @@ ECON_OUT.CC = CC; %M$/year
 ECON_OUT.RC = RC; %M$/year
 ECON_OUT.RD = RD; %M$/year
 ECON_OUT.OM = totalOM; %M$/year
+ECON_OUT.totalCC = totalCC; %M$, total overnight capital cost
 %ECON_OUT.revenueEff = revenueEff;
 
 end

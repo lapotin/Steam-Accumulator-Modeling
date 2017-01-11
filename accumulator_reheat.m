@@ -6,7 +6,7 @@ PASCALS_PER_BAR = 1.e5;
 EPSILON = .01;
 
 %%input desired electric power of accumulator
-Power_Electric = 530; %MW, desired electrical power of accumulator
+Power_Electric = 450; %MW, desired electrical power of accumulator
 in.Power_Electric = Power_Electric; 
 
 %%input desired pipe length, starting pressure, time step, run time,
@@ -14,7 +14,7 @@ in.Power_Electric = Power_Electric;
 DT = 10;  % s
 P0 = 60; % bar
 RTANK = 0.4064; % m (16 inches)
-LTANK = 200000.; % m
+LTANK = 150000.; % m
 VTANK = LTANK.*pi.*RTANK^2.;  % m3
 Energy = 530*2; %MWh
 T_END = (Energy/Power_Electric)*3600; % run time (s)
@@ -192,6 +192,7 @@ ECON_IN.wturb = outdata.WTURB; %MW, turbine power output
 ECON_IN.condenser = outdata.CONDENSER; %MW, condenser thermal power
 ECON_IN.discharge_time = T_END; %s, discharge time
 ECON_IN.charge_time = OUT_CHARGE.charge_time; %s, charge time
+ECON_IN.min_load = min_load; %MW, minimum load during charging
 ECON_IN.LTANK = LTANK; %m, pipe length
 ECON_IN.storage_capacity = total_m2_discharged/outdata.rho7; %m^3, required holding tank capacity
 ECON_OUT = REHEAT_ECON(ECON_IN); %function calculates revenue
